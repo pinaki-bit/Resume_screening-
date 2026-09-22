@@ -1,0 +1,230 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Configurable skill taxonomy for the Resume Intelligence System. Edit this file to add or rename skills. The NLP service rebuilds its PhraseMatcher from this file on startup.",
+    "instructions": "Each top-level key is a domain. Each domain maps to categories, each category maps to a list of canonical skills. Aliases are listed under each skill entry."
+  },
+  "domains": {
+    "Data Science": {
+      "programming": {
+        "Python": ["python", "py"],
+        "R": ["r programming", "r language"],
+        "SQL": ["sql", "structured query language", "mysql", "postgresql", "sqlite", "t-sql", "pl/sql"],
+        "Julia": ["julia"],
+        "Scala": ["scala"],
+        "MATLAB": ["matlab"]
+      },
+      "ml_frameworks": {
+        "scikit-learn": ["scikit learn", "sklearn"],
+        "TensorFlow": ["tensorflow", "tf"],
+        "PyTorch": ["pytorch", "torch"],
+        "Keras": ["keras"],
+        "XGBoost": ["xgboost", "xgb"],
+        "LightGBM": ["lightgbm", "lgbm"],
+        "CatBoost": ["catboost"],
+        "Hugging Face": ["hugging face", "huggingface", "transformers"]
+      },
+      "data_tools": {
+        "Pandas": ["pandas"],
+        "NumPy": ["numpy"],
+        "Matplotlib": ["matplotlib"],
+        "Seaborn": ["seaborn"],
+        "Plotly": ["plotly"],
+        "Jupyter": ["jupyter", "jupyter notebook", "jupyter lab"],
+        "Apache Spark": ["spark", "pyspark", "apache spark"],
+        "Hadoop": ["hadoop", "hdfs", "mapreduce"]
+      },
+      "concepts": {
+        "Machine Learning": ["machine learning", "ml", "supervised learning", "unsupervised learning"],
+        "Deep Learning": ["deep learning", "dl", "neural network", "cnn", "rnn", "lstm", "transformer"],
+        "Natural Language Processing": ["nlp", "natural language processing", "text mining", "text classification"],
+        "Computer Vision": ["computer vision", "cv", "image recognition", "object detection"],
+        "Statistics": ["statistics", "statistical analysis", "hypothesis testing", "regression"],
+        "Data Visualization": ["data visualization", "data viz", "dashboards"],
+        "Feature Engineering": ["feature engineering", "feature selection"],
+        "Model Evaluation": ["model evaluation", "cross validation", "hyperparameter tuning"]
+      },
+      "databases": {
+        "MongoDB": ["mongodb", "mongo"],
+        "Cassandra": ["cassandra"],
+        "Redis": ["redis"],
+        "Elasticsearch": ["elasticsearch", "elastic search"]
+      }
+    },
+    "Web Development": {
+      "frontend": {
+        "HTML": ["html", "html5"],
+        "CSS": ["css", "css3", "sass", "scss", "less"],
+        "JavaScript": ["javascript", "js", "es6", "ecmascript"],
+        "TypeScript": ["typescript", "ts"],
+        "React": ["react", "react.js", "reactjs"],
+        "Vue.js": ["vue", "vue.js", "vuejs"],
+        "Angular": ["angular", "angularjs"],
+        "Next.js": ["next.js", "nextjs"],
+        "Svelte": ["svelte"],
+        "Bootstrap": ["bootstrap"],
+        "Tailwind CSS": ["tailwind", "tailwindcss"]
+      },
+      "backend": {
+        "Node.js": ["node.js", "nodejs", "node"],
+        "Express.js": ["express", "express.js", "expressjs"],
+        "Django": ["django"],
+        "Flask": ["flask"],
+        "FastAPI": ["fastapi", "fast api"],
+        "Spring Boot": ["spring", "spring boot"],
+        "Laravel": ["laravel"],
+        "Ruby on Rails": ["rails", "ruby on rails", "ror"]
+      },
+      "concepts": {
+        "REST APIs": ["rest", "rest api", "restful", "restful api"],
+        "GraphQL": ["graphql"],
+        "WebSockets": ["websockets", "websocket"],
+        "OAuth": ["oauth", "oauth2"],
+        "Microservices": ["microservices", "microservice architecture"]
+      },
+      "databases": {
+        "PostgreSQL": ["postgresql", "postgres"],
+        "MySQL": ["mysql"],
+        "MongoDB": ["mongodb", "mongo"],
+        "SQLite": ["sqlite"],
+        "Redis": ["redis"]
+      }
+    },
+    "Cloud Computing": {
+      "aws": {
+        "AWS": ["aws", "amazon web services"],
+        "Amazon EC2": ["ec2", "amazon ec2"],
+        "Amazon S3": ["s3", "amazon s3"],
+        "Amazon RDS": ["rds", "amazon rds"],
+        "AWS Lambda": ["lambda", "aws lambda"],
+        "Amazon EKS": ["eks", "amazon eks"],
+        "Amazon ECS": ["ecs", "amazon ecs"],
+        "CloudFormation": ["cloudformation", "cloud formation"],
+        "IAM": ["iam", "identity access management"]
+      },
+      "azure": {
+        "Microsoft Azure": ["azure", "microsoft azure"],
+        "Azure DevOps": ["azure devops"],
+        "Azure Kubernetes Service": ["aks", "azure kubernetes"],
+        "Azure Functions": ["azure functions"],
+        "Azure Active Directory": ["azure ad", "azure active directory"]
+      },
+      "gcp": {
+        "Google Cloud Platform": ["gcp", "google cloud", "google cloud platform"],
+        "BigQuery": ["bigquery", "big query"],
+        "Google Kubernetes Engine": ["gke", "google kubernetes engine"],
+        "Cloud Run": ["cloud run"]
+      },
+      "concepts": {
+        "Cloud Architecture": ["cloud architecture", "cloud design"],
+        "Serverless": ["serverless", "function as a service", "faas"],
+        "Cloud Networking": ["vpc", "virtual private cloud", "cloud networking"],
+        "Load Balancing": ["load balancing", "load balancer"],
+        "Auto Scaling": ["auto scaling", "autoscaling"]
+      },
+      "tools": {
+        "Terraform": ["terraform"],
+        "Pulumi": ["pulumi"],
+        "Helm": ["helm"],
+        "Kubernetes": ["kubernetes", "k8s"],
+        "Docker": ["docker", "dockerfile", "docker-compose"]
+      }
+    },
+    "DevOps": {
+      "containers": {
+        "Docker": ["docker", "dockerfile", "docker-compose", "containerization"],
+        "Kubernetes": ["kubernetes", "k8s", "kubectl"],
+        "Helm": ["helm"],
+        "Podman": ["podman"]
+      },
+      "ci_cd": {
+        "CI/CD": ["ci/cd", "continuous integration", "continuous delivery", "continuous deployment"],
+        "Jenkins": ["jenkins"],
+        "GitHub Actions": ["github actions"],
+        "GitLab CI": ["gitlab ci", "gitlab cicd"],
+        "CircleCI": ["circleci"],
+        "Travis CI": ["travis ci", "travisci"],
+        "ArgoCD": ["argocd", "argo cd"]
+      },
+      "iac": {
+        "Terraform": ["terraform", "tf"],
+        "Ansible": ["ansible"],
+        "Puppet": ["puppet"],
+        "Chef": ["chef"],
+        "Pulumi": ["pulumi"]
+      },
+      "monitoring": {
+        "Prometheus": ["prometheus"],
+        "Grafana": ["grafana"],
+        "ELK Stack": ["elk", "elk stack", "elasticsearch logstash kibana"],
+        "Datadog": ["datadog"],
+        "New Relic": ["new relic"]
+      },
+      "version_control": {
+        "Git": ["git"],
+        "GitHub": ["github"],
+        "GitLab": ["gitlab"],
+        "Bitbucket": ["bitbucket"]
+      },
+      "scripting": {
+        "Bash": ["bash", "shell scripting", "shell script", "bash scripting"],
+        "Python": ["python"],
+        "PowerShell": ["powershell"]
+      }
+    },
+    "Cybersecurity": {
+      "network_security": {
+        "Network Security": ["network security", "network defence"],
+        "Firewall": ["firewall", "next-gen firewall", "ngfw"],
+        "VPN": ["vpn", "virtual private network"],
+        "IDS/IPS": ["ids", "ips", "intrusion detection", "intrusion prevention", "snort", "suricata"]
+      },
+      "siem": {
+        "SIEM": ["siem", "security information and event management"],
+        "Splunk": ["splunk"],
+        "QRadar": ["qradar", "ibm qradar"],
+        "ArcSight": ["arcsight"],
+        "Microsoft Sentinel": ["sentinel", "microsoft sentinel", "azure sentinel"]
+      },
+      "offensive_security": {
+        "Penetration Testing": ["penetration testing", "pen testing", "pentest", "ethical hacking"],
+        "Vulnerability Assessment": ["vulnerability assessment", "vuln assessment"],
+        "Metasploit": ["metasploit"],
+        "Burp Suite": ["burp suite", "burp"],
+        "Nmap": ["nmap"],
+        "Nessus": ["nessus"],
+        "Kali Linux": ["kali", "kali linux"]
+      },
+      "digital_forensics": {
+        "Digital Forensics": ["digital forensics", "computer forensics", "dfir"],
+        "Incident Response": ["incident response", "ir", "dfir"],
+        "Volatility": ["volatility"],
+        "Autopsy": ["autopsy"],
+        "FTK": ["ftk", "forensic toolkit"]
+      },
+      "cloud_security": {
+        "Cloud Security": ["cloud security", "cspm"],
+        "Zero Trust": ["zero trust", "ztna"],
+        "IAM": ["iam", "identity access management", "privileged access"]
+      },
+      "compliance": {
+        "GDPR": ["gdpr", "general data protection regulation"],
+        "ISO 27001": ["iso 27001", "iso27001"],
+        "SOC 2": ["soc 2", "soc2"],
+        "NIST": ["nist", "nist framework"],
+        "PCI DSS": ["pci dss", "pci"]
+      },
+      "os": {
+        "Linux": ["linux", "ubuntu", "centos", "rhel", "debian", "fedora"],
+        "Windows Server": ["windows server", "active directory", "ad"],
+        "Unix": ["unix"]
+      },
+      "programming": {
+        "Python": ["python"],
+        "C": ["c programming"],
+        "C++": ["c++", "cpp"],
+        "Assembly": ["assembly", "asm"]
+      }
+    }
+  }
+}

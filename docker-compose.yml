@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./resume_screening.db
+      - SECRET_KEY=super-secret-development-key-please-change-in-prod
+      - ADMIN_EMAIL=admin@example.com
+      - ADMIN_PASSWORD=adminpassword
+      - CORS_ORIGINS=http://localhost:8501
+    volumes:
+      - ./backend/resume_screening.db:/app/resume_screening.db
+      - ./backend/uploads:/app/uploads
+      - ./ml/artifacts:/app/ml/artifacts
+      - ./shared:/app/shared
+    command: >
+      bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://backend:8000
+    depends_on:
+      - backend

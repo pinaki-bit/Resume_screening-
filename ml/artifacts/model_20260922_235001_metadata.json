@@ -1,0 +1,19 @@
+{
+  "version": "20260922_235001",
+  "model_name": "LinearSVC",
+  "classes": [
+    "Cloud Computing",
+    "Cybersecurity",
+    "Data Science",
+    "DevOps",
+    "Web Development"
+  ],
+  "training_samples": 3563,
+  "test_samples": 629,
+  "random_seed": 42,
+  "val_macro_f1": 0.9415118427149206,
+  "test_macro_f1": 0.9323055055416314,
+  "test_weighted_f1": 0.9284700432056746,
+  "classification_report": "                 precision    recall  f1-score   support\n\nCloud Computing       0.94      0.93      0.94        87\n  Cybersecurity       0.95      0.93      0.94        57\n   Data Science       0.91      0.91      0.91       178\n         DevOps       0.95      0.95      0.95        95\nWeb Development       0.93      0.93      0.93       212\n\n       accuracy                           0.93       629\n      macro avg       0.93      0.93      0.93       629\n   weighted avg       0.93      0.93      0.93       629\n",
+  "trained_at": "2026-09-22T18:20:01.107486"
+}

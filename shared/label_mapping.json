@@ -1,0 +1,92 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Label normalization mapping for the Resume Classification Model. Maps dataset-specific category names to the five canonical target categories. Only verified mappings are listed here — do NOT add a mapping unless the relationship is clearly justified.",
+    "target_categories": [
+      "Data Science",
+      "Web Development",
+      "Cloud Computing",
+      "DevOps",
+      "Cybersecurity"
+    ],
+    "instructions": "The 'dataset_label' field is the exact string as it appears in your dataset's category column. The 'canonical' field is the target category. The 'justification' field must explain why the mapping is valid. If a dataset label does not map cleanly to any target category, add it to 'unmapped_labels' with a note."
+  },
+  "mappings": [
+    {
+      "dataset_label": "Data Science",
+      "canonical": "Data Science",
+      "justification": "Exact match"
+    },
+    {
+      "dataset_label": "SQL Developer",
+      "canonical": "Data Science",
+      "justification": "Database and SQL are core to data science/engineering"
+    },
+    {
+      "dataset_label": "ETL Developer",
+      "canonical": "Data Science",
+      "justification": "ETL is a data engineering task"
+    },
+    {
+      "dataset_label": "Database",
+      "canonical": "Data Science",
+      "justification": "Database administration is closely related"
+    },
+    {
+      "dataset_label": "Java Developer",
+      "canonical": "Web Development",
+      "justification": "Software development role"
+    },
+    {
+      "dataset_label": "DotNet Developer",
+      "canonical": "Web Development",
+      "justification": "Software development role"
+    },
+    {
+      "dataset_label": "Web Designing",
+      "canonical": "Web Development",
+      "justification": "Web development role"
+    },
+    {
+      "dataset_label": "React Developer",
+      "canonical": "Web Development",
+      "justification": "Frontend web development"
+    },
+    {
+      "dataset_label": "Python Developer",
+      "canonical": "Web Development",
+      "justification": "Software development role"
+    },
+    {
+      "dataset_label": "DevOps",
+      "canonical": "DevOps",
+      "justification": "Exact match"
+    },
+    {
+      "dataset_label": "Testing",
+      "canonical": "DevOps",
+      "justification": "QA and testing often fall under CI/CD and DevOps"
+    },
+    {
+      "dataset_label": "Network Security Engineer",
+      "canonical": "Cybersecurity",
+      "justification": "Core cybersecurity role"
+    },
+    {
+      "dataset_label": "SAP Developer",
+      "canonical": "Cloud Computing",
+      "justification": "Enterprise software often tied to cloud ERP"
+    },
+    {
+      "dataset_label": "Information Technology",
+      "canonical": "Cloud Computing",
+      "justification": "General IT mapped to cloud computing for this demo"
+    },
+    {
+      "dataset_label": "Blockchain",
+      "canonical": "Cybersecurity",
+      "justification": "Cryptography and security concepts"
+    }
+  ],
+  "unmapped_labels": []
+}
