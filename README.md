@@ -15,6 +15,37 @@ Welcome to **Resume Intelligence**, an advanced AI-powered Applicant Tracking Sy
 
 ---
 
+## 🧠 How the Intelligence Works
+
+The core value of this ATS is its ability to mimic a human recruiter's initial screening process while maintaining objective, deterministic criteria.
+
+### 1. Text Extraction & OCR
+When a PDF is uploaded, the system first attempts to extract raw text using `pdfminer.six`. If the PDF is an image-only scan (or text extraction fails), the system has an integrated fallback to **OCR (Optical Character Recognition)** using `EasyOCR` (with GPU acceleration) and `pdf2image`. This ensures that *no resume is left behind*, regardless of how it was formatted.
+
+### 2. Natural Language Processing (NLP)
+Once raw text is obtained, we utilize **spaCy** (`en_core_web_sm`) to process the text. A custom `PhraseMatcher` is loaded with an extensive taxonomy of technical skills, frameworks, and soft skills (found in `shared/skill_taxonomy.json`). 
+- **Lemmatization:** The text is lemmatized so variations of a word (e.g., "Developing" vs "Developer") match the core skill correctly.
+- **Entity Recognition:** Skills are extracted regardless of their formatting in the resume.
+
+### 3. Machine Learning Domain Prediction
+The extracted text is then passed to a trained Machine Learning pipeline (using `scikit-learn`). 
+- **TF-IDF Vectorization:** The text is transformed into numerical vectors.
+- **LinearSVC / XGBoost:** A trained classifier predicts the industry/domain of the candidate (e.g., "Data Science", "Web Development", "HR").
+- **Confidence Scoring:** The model returns a confidence tier ("high", "medium", "low").
+
+### 4. The Scoring Formula
+When a resume is matched against a Job Profile, the system calculates a **Relevance Score (0-100)**. The formula heavily weights *Required* skills over *Preferred* skills.
+
+```text
+Formula = (0.7 * Required_Skill_Coverage) + (0.3 * Preferred_Skill_Coverage)
+```
+
+**Domain Bonus:** If the Machine Learning model predicts that the candidate's domain matches the Job's domain with High or Medium confidence, a 5-10 point bonus is applied to the final score. 
+
+*(Note: The maximum achievable score is capped at 100%).*
+
+---
+
 ## 🛠️ Technology Stack
 
 This project is built using a modern Python data stack, separating the backend intelligence from the frontend user interface.
