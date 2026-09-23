@@ -58,11 +58,18 @@ class ClassificationResult:
 @lru_cache(maxsize=1)
 def _load_model() -> tuple[Any, str, dict[str, Any]] | None:
     """
-    Load the trained pipeline artifact.
+    Load the trained pipeline artifact with integrity verification.
+
+    Security:
+      - Computes SHA-256 hash of the artifact file before loading.
+      - If a .sha256 sidecar file exists, verifies the hash matches.
+      - Logs the hash for audit trail regardless.
 
     Returns:
         (pipeline, version_tag, artifact_dict) or None if unavailable.
     """
+    import hashlib
+
     from app.config import get_settings
     import joblib
     settings = get_settings()
@@ -77,6 +84,29 @@ def _load_model() -> tuple[Any, str, dict[str, Any]] | None:
         return None
 
     try:
+        # --- Integrity check: compute SHA-256 hash ---
+        file_bytes = model_path.read_bytes()
+        file_hash = hashlib.sha256(file_bytes).hexdigest()
+        logger.info(
+            "Model artifact hash (SHA-256): %s [%s]",
+            file_hash, model_path.name,
+        )
+
+        # --- Verify against sidecar hash file if present ---
+        hash_sidecar = model_path.with_suffix(model_path.suffix + ".sha256")
+        if hash_sidecar.exists():
+            expected_hash = hash_sidecar.read_text(encoding="utf-8").strip().split()[0]
+            if file_hash != expected_hash:
+                logger.critical(
+                    "🚫 MODEL INTEGRITY FAILURE: Expected hash %s but got %s. "
+                    "The model artifact may have been tampered with. "
+                    "Refusing to load.",
+                    expected_hash, file_hash,
+                )
+                return None
+            logger.info("✅ Model hash verified against sidecar: %s", hash_sidecar.name)
+
+        # --- Load the artifact ---
         artifact = joblib.load(model_path)
         # Artifact is expected to be a dict: {"pipeline": ..., "version": ..., "classes": ...}
         pipeline = artifact.get("pipeline")
@@ -162,15 +192,30 @@ def predict(text: str) -> ClassificationResult:
                 confidence_label = "low"
         elif hasattr(pipeline, "decision_function"):
             # LinearSVC — decision score is not a probability
-            # We can still flag low-confidence cases via the score margin
+            # Use Platt scaling approximation (sigmoid) to convert to pseudo-probabilities
+            import math
+            
             scores = pipeline.decision_function([text])[0]
-            max_score = float(max(scores))
-            # Heuristic: if the top score is close to the second, confidence is low
-            sorted_scores = sorted(scores, reverse=True)
-            margin = sorted_scores[0] - sorted_scores[1] if len(sorted_scores) > 1 else 0
-            if margin > 1.0:
+            # Handle multi-class which returns (n_classes,) or binary which returns (1,)
+            if len(scores.shape) == 0:
+                scores = [scores]
+                
+            # Sigmoid: 1 / (1 + exp(-x))
+            probs = [1 / (1 + math.exp(-s)) for s in scores]
+            total_prob = sum(probs)
+            probs = [p / total_prob for p in probs] # normalize so they sum to 1
+            
+            if label_encoder is not None:
+                classes = label_encoder.inverse_transform(range(len(probs)))
+            else:
+                classes = pipeline.classes_
+                
+            all_probs = {str(cls): float(p) for cls, p in zip(classes, probs)}
+            top_prob = float(max(probs))
+            
+            if top_prob >= CONFIDENCE_HIGH:
                 confidence_label = "high"
-            elif margin > 0.3:
+            elif top_prob >= CONFIDENCE_MEDIUM:
                 confidence_label = "medium"
             else:
                 confidence_label = "low"

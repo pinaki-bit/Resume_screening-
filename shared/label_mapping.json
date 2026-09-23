@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Label normalization mapping for the Resume Classification Model. Maps dataset-specific category names to the five canonical target categories. Only verified mappings are listed here — do NOT add a mapping unless the relationship is clearly justified.",
     "target_categories": [
       "Data Science",
@@ -18,34 +18,9 @@
       "justification": "Exact match"
     },
     {
-      "dataset_label": "SQL Developer",
-      "canonical": "Data Science",
-      "justification": "Database and SQL are core to data science/engineering"
-    },
-    {
-      "dataset_label": "ETL Developer",
-      "canonical": "Data Science",
-      "justification": "ETL is a data engineering task"
-    },
-    {
-      "dataset_label": "Database",
-      "canonical": "Data Science",
-      "justification": "Database administration is closely related"
-    },
-    {
-      "dataset_label": "Java Developer",
-      "canonical": "Web Development",
-      "justification": "Software development role"
-    },
-    {
-      "dataset_label": "DotNet Developer",
-      "canonical": "Web Development",
-      "justification": "Software development role"
-    },
-    {
       "dataset_label": "Web Designing",
       "canonical": "Web Development",
-      "justification": "Web development role"
+      "justification": "Frontend web development role"
     },
     {
       "dataset_label": "React Developer",
@@ -53,9 +28,9 @@
       "justification": "Frontend web development"
     },
     {
-      "dataset_label": "Python Developer",
-      "canonical": "Web Development",
-      "justification": "Software development role"
+      "dataset_label": "DevOps Engineer",
+      "canonical": "DevOps",
+      "justification": "Exact match"
     },
     {
       "dataset_label": "DevOps",
@@ -63,30 +38,26 @@
       "justification": "Exact match"
     },
     {
-      "dataset_label": "Testing",
-      "canonical": "DevOps",
-      "justification": "QA and testing often fall under CI/CD and DevOps"
-    },
-    {
       "dataset_label": "Network Security Engineer",
       "canonical": "Cybersecurity",
       "justification": "Core cybersecurity role"
     },
     {
-      "dataset_label": "SAP Developer",
-      "canonical": "Cloud Computing",
-      "justification": "Enterprise software often tied to cloud ERP"
-    },
-    {
-      "dataset_label": "Information Technology",
-      "canonical": "Cloud Computing",
-      "justification": "General IT mapped to cloud computing for this demo"
-    },
-    {
-      "dataset_label": "Blockchain",
+      "dataset_label": "Cyber Security",
       "canonical": "Cybersecurity",
-      "justification": "Cryptography and security concepts"
+      "justification": "Exact match"
     }
   ],
-  "unmapped_labels": []
+  "unmapped_labels": [
+    "Python Developer",
+    "SAP Developer",
+    "Blockchain",
+    "Testing",
+    "Information Technology",
+    "SQL Developer",
+    "Database",
+    "Java Developer",
+    "DotNet Developer",
+    "ETL Developer"
+  ]
 }

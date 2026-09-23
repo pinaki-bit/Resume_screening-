@@ -52,7 +52,7 @@ def db_session(create_test_tables) -> Session:
 def client(db_session: Session) -> TestClient:
     app = create_app()
 
-    # Seed test users
+    # Seed test users (must_change_password=False for test stability)
     if not db_session.query(User).filter_by(email="test@example.com").first():
         db_session.add(User(
             email="test@example.com",
@@ -61,6 +61,7 @@ def client(db_session: Session) -> TestClient:
             role="admin",
             is_active=True,
             is_admin=True,
+            must_change_password=False,
         ))
     if not db_session.query(User).filter_by(email="hr@example.com").first():
         db_session.add(User(
@@ -70,6 +71,7 @@ def client(db_session: Session) -> TestClient:
             role="hr",
             is_active=True,
             is_admin=False,
+            must_change_password=False,
         ))
     if not db_session.query(User).filter_by(email="readonly@example.com").first():
         db_session.add(User(
@@ -79,6 +81,7 @@ def client(db_session: Session) -> TestClient:
             role="readonly",
             is_active=True,
             is_admin=False,
+            must_change_password=False,
         ))
     db_session.commit()
 

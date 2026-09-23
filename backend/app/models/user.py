@@ -44,6 +44,12 @@ class User(Base):
     # Kept for backward compat — role=="admin" is the authoritative check
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # When True, user MUST change password before accessing any other endpoint.
+    # Set automatically when seeded with default credentials.
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default="0"
+    )
+
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

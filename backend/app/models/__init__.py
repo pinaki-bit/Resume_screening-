@@ -14,6 +14,7 @@ from app.models.screening import ScreeningResult  # noqa: F401
 from app.models.model_version import ModelVersion  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.audit_event import AuditEvent  # noqa: F401
+from app.models.token_blocklist import TokenBlocklist  # noqa: F401
 
 __all__ = [
     "User",
@@ -26,4 +27,6 @@ __all__ = [
     "ModelVersion",
     "Notification",
     "AuditEvent",
+    "TokenBlocklist",
 ]
+

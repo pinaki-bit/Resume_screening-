@@ -89,5 +89,5 @@ def build_feature_pipeline(
         strip_accents="unicode",
         analyzer="word",
         token_pattern=r"(?u)\b[a-z0-9][a-z0-9\.\-\+\#\/\_]{0,30}\b",
-        stop_words=None,  # Don't use built-in stopwords — tech terms like "is" are meaningful
+        stop_words="english",  # Use built-in english stopwords to reduce noise
     )

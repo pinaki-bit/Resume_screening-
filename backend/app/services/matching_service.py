@@ -46,6 +46,7 @@ class MatchResult:
     matched_required: list[str]
     missing_required: list[str]
     matched_preferred: list[str]
+    matched_evidence: dict[str, str] # Maps skill name to evidence snippet
     score_breakdown: dict           # explainability
     warning: str | None
 
@@ -53,7 +54,7 @@ class MatchResult:
 def compute_match(
     required_skills: list[tuple[str, float]],    # [(skill_name, weight), ...]
     preferred_skills: list[tuple[str, float]],   # [(skill_name, weight), ...]
-    candidate_skills: set[str],                  # canonical names, lowercased
+    candidate_skills: list,                      # list of SkillMatch objects
     required_weight: float = DEFAULT_REQUIRED_WEIGHT,
     preferred_weight: float = DEFAULT_PREFERRED_WEIGHT,
 ) -> MatchResult:
@@ -63,15 +64,18 @@ def compute_match(
     Args:
         required_skills:  List of (canonical_skill_name, weight) for required skills.
         preferred_skills: List of (canonical_skill_name, weight) for preferred skills.
-        candidate_skills: Set of canonical skill names extracted from the candidate's resume.
+        candidate_skills: List of SkillMatch objects extracted from the candidate's resume.
         required_weight:  Relative weight of required coverage in the combined score.
         preferred_weight: Relative weight of preferred coverage in the combined score.
 
     Returns:
         MatchResult with full transparency breakdown.
     """
-    # Normalize skill names for comparison
-    candidate_lower = {s.lower() for s in candidate_skills}
+    # Normalize skill names for comparison and extract evidence
+    candidate_skills_dict = {
+        s.canonical_name.lower(): s.evidence_snippet for s in candidate_skills
+    }
+    candidate_lower = set(candidate_skills_dict.keys())
 
     # --- Guard: no skills at all ---
     if not required_skills and not preferred_skills:
@@ -82,6 +86,7 @@ def compute_match(
             matched_required=[],
             missing_required=[],
             matched_preferred=[],
+            matched_evidence={},
             score_breakdown={},
             warning="Insufficient job requirements for skill-match scoring.",
         )
@@ -89,14 +94,17 @@ def compute_match(
     # --- Required skills ---
     matched_req: list[str] = []
     missing_req: list[str] = []
+    matched_evidence: dict[str, str] = {}
     total_req_weight = 0.0
     matched_req_weight = 0.0
 
     for skill, weight in required_skills:
         total_req_weight += weight
-        if skill.lower() in candidate_lower:
+        skill_lower = skill.lower()
+        if skill_lower in candidate_lower:
             matched_req.append(skill)
             matched_req_weight += weight
+            matched_evidence[skill] = candidate_skills_dict[skill_lower]
         else:
             missing_req.append(skill)
 
@@ -113,9 +121,11 @@ def compute_match(
 
     for skill, weight in preferred_skills:
         total_pref_weight += weight
-        if skill.lower() in candidate_lower:
+        skill_lower = skill.lower()
+        if skill_lower in candidate_lower:
             matched_pref.append(skill)
             matched_pref_weight += weight
+            matched_evidence[skill] = candidate_skills_dict[skill_lower]
 
     if total_pref_weight > 0:
         preferred_coverage = (matched_pref_weight / total_pref_weight) * 100.0
@@ -161,6 +171,7 @@ def compute_match(
         matched_required=matched_req,
         missing_required=missing_req,
         matched_preferred=matched_pref,
+        matched_evidence=matched_evidence,
         score_breakdown=breakdown,
         warning=None,
     )

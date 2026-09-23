@@ -130,19 +130,27 @@ def _basic_tokenize(text: str) -> list[str]:
     return [t for t in text.split() if len(t) > 1]
 
 
-def extract_section(text: str, section_name: str) -> str | None:
+def extract_structured_sections(text: str) -> dict[str, str | None]:
     """
-    Attempt to extract a named section from resume text.
-
-    Looks for common section headers like "EXPERIENCE", "SKILLS", etc.
-    Returns the section text or None if not found.
+    Attempt to extract major structured sections from resume text.
+    Returns a dictionary of sections (Experience, Education, Certifications).
     """
-    # Patterns for common resume section headers
-    pattern = re.compile(
-        rf"(?:^|\n)\s*{re.escape(section_name)}\s*[:\-]?\s*\n(.*?)(?=\n\s*[A-Z][A-Z\s]{{3,}}\s*[:\-]?\s*\n|\Z)",
-        re.IGNORECASE | re.DOTALL,
-    )
-    match = pattern.search(text)
-    if match:
-        return match.group(1).strip()
-    return None
+    sections = {
+        "experience": None,
+        "education": None,
+        "certifications": None,
+    }
+    
+    # Common section header patterns
+    patterns = {
+        "experience": r"(?:^|\n)\s*(?:WORK EXPERIENCE|PROFESSIONAL EXPERIENCE|EXPERIENCE|EMPLOYMENT HISTORY)\s*[:\-]?\s*\n(.*?)(?=\n\s*[A-Z][A-Z\s]{3,}\s*[:\-]?\s*\n|\Z)",
+        "education": r"(?:^|\n)\s*(?:EDUCATION|ACADEMIC BACKGROUND|ACADEMICS)\s*[:\-]?\s*\n(.*?)(?=\n\s*[A-Z][A-Z\s]{3,}\s*[:\-]?\s*\n|\Z)",
+        "certifications": r"(?:^|\n)\s*(?:CERTIFICATIONS|LICENSES AND CERTIFICATIONS|CERTIFICATES)\s*[:\-]?\s*\n(.*?)(?=\n\s*[A-Z][A-Z\s]{3,}\s*[:\-]?\s*\n|\Z)",
+    }
+    
+    for key, regex in patterns.items():
+        match = re.search(regex, text, re.IGNORECASE | re.DOTALL)
+        if match:
+            sections[key] = match.group(1).strip()
+            
+    return sections

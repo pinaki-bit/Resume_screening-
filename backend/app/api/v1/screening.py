@@ -18,7 +18,6 @@ GET  /api/v1/screening/results/{result_id}
     - Get a single ScreeningResult
 """
 
-from __future__ import annotations
 
 import datetime
 import json
@@ -89,7 +88,7 @@ def match_resume_to_job(
         )
 
     # Extract candidate skills
-    candidate_skills = {s.canonical_name for s in resume.extracted_skills}
+    candidate_skills = resume.extracted_skills
 
     # Extract job requirements
     required_skills, preferred_skills = matching_service.extract_job_skills(job.requirements)
@@ -197,13 +196,30 @@ def get_job_results(
     review_status: str | None = None,
     db: Session = Depends(get_db),
 ) -> list[dict]:
-    """Return all candidates ranked by relevance score for a job."""
+    """
+    Return all candidates ranked by relevance score for a job.
+
+    Access control:
+      - Admin/HR: see all results.
+      - Readonly: see only results for resumes they uploaded.
+    """
     job = _get_job_or_404(db, job_id)
     ranked = ranking_service.rank_results_for_job(
         db, job.id, review_status_filter=review_status
     )
-    # Convert dataclass to dict for JSON response
-    return [r.__dict__ for r in ranked]
+    results = [r.__dict__ for r in ranked]
+
+    # IDOR guard: readonly users only see their own results
+    if current_user.role == "readonly":
+        # Get resume IDs uploaded by this user
+        own_resume_ids = {
+            r.id for r in db.query(Resume.id).filter(
+                Resume.uploaded_by == current_user.id
+            ).all()
+        }
+        results = [r for r in results if r.get("resume_id") in own_resume_ids]
+
+    return results
 
 
 @router.get(
@@ -216,11 +232,28 @@ def get_result(
     current_user: AnyAuthUser,
     db: Session = Depends(get_db),
 ) -> ScreeningResult:
+    """
+    Get a single screening result by public ID.
+
+    Access control:
+      - Admin/HR: see any result.
+      - Readonly: see only results for resumes they uploaded.
+    """
     result = db.query(ScreeningResult).filter(
         ScreeningResult.public_id == result_id
     ).first()
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Result not found.")
+
+    # IDOR guard: readonly users can only see their own results
+    if current_user.role == "readonly":
+        resume = db.query(Resume).filter(Resume.id == result.resume_id).first()
+        if not resume or resume.uploaded_by != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. You can only view results for resumes you uploaded.",
+            )
+
     return result
 
 

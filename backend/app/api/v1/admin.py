@@ -11,7 +11,6 @@ GET    /api/v1/admin/model-versions  — list trained model versions
 POST   /api/v1/admin/model-versions/{version_id}/activate — activate a model
 """
 
-from __future__ import annotations
 
 import datetime
 import logging
@@ -114,6 +113,33 @@ def update_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
     update_data = payload.model_dump(exclude_unset=True)
+
+    # --- Last-admin protection ---
+    # If this user is currently an admin, check if this action would remove
+    # the last active admin (via role change or deactivation).
+    if user.role == "admin" and user.is_active:
+        would_lose_admin = (
+            ("role" in update_data and update_data["role"] != "admin")
+            or ("is_active" in update_data and not update_data["is_active"])
+        )
+        if would_lose_admin:
+            active_admin_count = db.query(User).filter(
+                User.role == "admin",
+                User.is_active == True,  # noqa: E712
+            ).count()
+            if active_admin_count <= 2:
+                # 2 because current_user is also an admin; removing this one leaves 1
+                # But if only this user + current_user are admins, removing this one is ok
+                # We really need: would there be at least 1 active admin left?
+                remaining = active_admin_count - 1  # after this change
+                if remaining < 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=(
+                            "Cannot demote or disable the last active administrator. "
+                            "Promote another user to admin first."
+                        ),
+                    )
 
     if "role" in update_data:
         valid_roles = {"admin", "hr", "readonly"}

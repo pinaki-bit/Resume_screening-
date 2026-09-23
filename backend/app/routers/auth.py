@@ -59,5 +59,5 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
             detail="Account is disabled. Contact an administrator.",
         )
 
-    token, expires_in = create_access_token(subject=user.email)
+    token, expires_in, _jti = create_access_token(subject=user.email)
     return TokenResponse(access_token=token, expires_in=expires_in)

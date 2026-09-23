@@ -1,13 +1,14 @@
 """
 backend/app/main.py
 
-FastAPI application factory — v0.2.0
+FastAPI application factory — v0.3.0
 
-Changes from v0.1.0:
-  - All API routes now under /api/v1/ prefix
-  - Legacy /auth/login and /health kept for backward compat (deprecated)
-  - Added rate limiting via slowapi
-  - All new routers registered
+Security enhancements:
+  - CORS restricted to specific methods/headers (no wildcards)
+  - API docs conditionally disabled in production
+  - Startup security checks (refuses insecure production configs)
+  - Rate limiter registered for login/upload enforcement
+  - Default admin seeded with must_change_password=True
 """
 
 from __future__ import annotations
@@ -19,14 +20,14 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
-from app.config import get_settings
+from app.config import get_settings, startup_security_checks
 from app.core.security import hash_password
 from app.database import create_all_tables, get_db
 from app.models.user import User
+from app.rate_limiter import limiter
 
 # Routers — new v1 namespace
 from app.api.v1 import auth as auth_v1
@@ -41,11 +42,6 @@ from app.routers import health
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Rate limiter (shared instance — attached to app state)
-# ---------------------------------------------------------------------------
-limiter = Limiter(key_func=get_remote_address)
-
 
 # ---------------------------------------------------------------------------
 # Lifespan
@@ -54,6 +50,10 @@ limiter = Limiter(key_func=get_remote_address)
 @asynccontextmanager
 async def _lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     settings = get_settings()
+
+    # --- Security checks before anything else ---
+    startup_security_checks(settings)
+
     logger.info("Starting %s v%s [%s]", settings.app_title, settings.app_version, settings.app_env)
     _init_db(settings)
     yield
@@ -76,9 +76,9 @@ def create_app() -> FastAPI:
             "NLP/ML foundation.\n"
             "**Phase 4+**: Resume upload, screening, analytics, admin dashboard."
         ),
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json",
+        docs_url=settings.docs_url,
+        redoc_url=settings.redoc_url,
+        openapi_url=settings.openapi_url,
         lifespan=_lifespan,
     )
 
@@ -86,14 +86,28 @@ def create_app() -> FastAPI:
     application.state.limiter = limiter
     application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-    # ── CORS ────────────────────────────────────────────────────────────────
+    # ── CORS — restricted methods and headers (no wildcards) ────────────────
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "X-Request-ID"],
     )
+
+    # ── Security headers middleware ─────────────────────────────────────────
+    @application.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        if settings.is_production:
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=63072000; includeSubDomains; preload"
+            )
+        return response
 
     # ── v1 API routers ──────────────────────────────────────────────────────
     application.include_router(auth_v1.router)
@@ -133,10 +147,19 @@ def _seed_admin(settings) -> None:
                 role="admin",
                 is_active=True,
                 is_admin=True,
+                # Force password change if using default credentials
+                must_change_password=settings.has_default_admin_password,
             )
             db.add(admin)
             db.commit()
-            logger.info("Seeded admin user: %s", settings.admin_email)
+            if settings.has_default_admin_password:
+                logger.warning(
+                    "⚠️  Seeded admin user '%s' with DEFAULT password. "
+                    "The admin will be forced to change it on first login.",
+                    settings.admin_email,
+                )
+            else:
+                logger.info("Seeded admin user: %s", settings.admin_email)
         else:
             # Ensure legacy admin has the role field set correctly
             if existing.role != "admin":

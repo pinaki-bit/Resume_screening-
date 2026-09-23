@@ -64,6 +64,9 @@ def load_and_prepare(
         print(f"Available: {list(df.columns)}")
         sys.exit(1)
 
+    # Deduplicate before mapping
+    df = df.drop_duplicates(subset=[text_col])
+
     # Load label mapping
     with open(mapping_path, "r") as f:
         mapping_data = json.load(f)
@@ -99,7 +102,7 @@ def train(
 ) -> None:
     import numpy as np
     import joblib
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
     from sklearn.linear_model import LogisticRegression
     from sklearn.svm import LinearSVC
     from sklearn.naive_bayes import MultinomialNB
@@ -114,17 +117,11 @@ def train(
         print("ERROR: Fewer than 50 usable samples after filtering. Cannot train.")
         sys.exit(1)
 
-    # Stratified split: 70% train, 15% val, 15% test
+    # Split: 85% trainval (for CV), 15% test
     X_trainval, X_test, y_trainval, y_test = train_test_split(
         X, y, test_size=0.15, stratify=y, random_state=seed
     )
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_trainval, y_trainval,
-        test_size=(0.15 / 0.85),  # ~15% of total
-        stratify=y_trainval,
-        random_state=seed,
-    )
-    print(f"\nSplit: train={len(X_train)}, val={len(X_val)}, test={len(X_test)}")
+    print(f"\nSplit: trainval={len(X_trainval)}, test={len(X_test)}")
 
     # Build candidates
     tfidf = build_feature_pipeline()
@@ -149,21 +146,23 @@ def train(
         ]),
     }
 
-    # Evaluate each on validation set
+    # Evaluate each using 5-fold cross validation on trainval set
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
     val_scores = {}
+    
     for name, pipeline in candidates.items():
-        pipeline.fit(X_train, y_train)
-        val_preds = pipeline.predict(X_val)
-        f1 = f1_score(y_val, val_preds, average="macro", zero_division=0)
-        val_scores[name] = f1
-        print(f"  {name:25s}  val macro-F1 = {f1:.4f}")
+        # cross_val_score returns array of scores
+        scores = cross_val_score(pipeline, X_trainval, y_trainval, cv=cv, scoring="f1_macro", n_jobs=-1)
+        mean_f1 = np.mean(scores)
+        val_scores[name] = mean_f1
+        print(f"  {name:25s}  CV macro-F1 = {mean_f1:.4f} (std={np.std(scores):.4f})")
 
     best_name = max(val_scores, key=val_scores.get)
-    print(f"\nBest model: {best_name} (val macro-F1={val_scores[best_name]:.4f})")
+    print(f"\nBest model: {best_name} (CV macro-F1={val_scores[best_name]:.4f})")
 
-    # Re-train best model on train+val combined
+    # Retrain best model on the entire trainval set
     best_pipeline = candidates[best_name]
-    best_pipeline.fit(X_train + X_val, y_train + y_val)
+    best_pipeline.fit(X_trainval, y_trainval)
 
     # Evaluate on held-out test set
     test_preds = best_pipeline.predict(X_test)
@@ -188,7 +187,7 @@ def train(
         "version": version_tag,
         "model_name": best_name,
         "classes": list(best_pipeline.classes_),
-        "training_samples": len(X_train) + len(X_val),
+        "training_samples": len(X_trainval),
         "test_samples": len(X_test),
         "random_seed": seed,
         "val_macro_f1": val_scores[best_name],

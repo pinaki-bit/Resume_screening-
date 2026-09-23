@@ -12,7 +12,6 @@ POST   /api/v1/jobs/{job_id}/requirements — add requirement (hr, admin)
 DELETE /api/v1/jobs/{job_id}/requirements/{req_id} — remove requirement (hr, admin)
 """
 
-from __future__ import annotations
 
 from typing import List
 

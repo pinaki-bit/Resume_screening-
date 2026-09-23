@@ -22,7 +22,6 @@ DELETE /api/v1/resumes/{resume_id}
     - Admin-only soft delete (mark as failed/archived)
 """
 
-from __future__ import annotations
 
 import datetime
 import json
@@ -33,6 +32,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import AdminUser, AnyAuthUser, HRUser
+from app.config import get_settings
 from app.database import get_db
 from app.models.candidate import Candidate
 from app.models.resume import Resume, ProcessingStatus
@@ -43,6 +43,7 @@ from app.services import pdf_service
 from app.services.pdf_service import PDFValidationError
 from app.services import skill_service
 from app.services import classification_service
+from app.rate_limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -150,6 +151,7 @@ def _run_processing_pipeline(
     status_code=status.HTTP_201_CREATED,
     summary="Upload and process a resume PDF",
 )
+@limiter.limit(get_settings().rate_limit_upload)
 async def upload_resume(
     request: Request,
     current_user: HRUser,

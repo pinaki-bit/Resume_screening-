@@ -173,23 +173,65 @@ def extract_text_from_path(file_path: str) -> ExtractionResult:
         )
 
     if not raw_text or not raw_text.strip():
-        return ExtractionResult(
-            False, None, 0, page_count,
-            "No text could be extracted. The PDF may contain only images. "
-            "OCR is not currently supported — please upload a text-based PDF."
-        )
+        # Fallback to OCR if tesseract is installed
+        ocr_text = _run_ocr_fallback(path)
+        if ocr_text:
+            raw_text = ocr_text
+        else:
+            return ExtractionResult(
+                False, None, 0, page_count,
+                "No text could be extracted and OCR is either unavailable or failed. "
+                "The PDF may contain only images."
+            )
 
     cleaned = _normalize_text(raw_text)
     char_count = len(cleaned)
 
     if char_count < MIN_TEXT_LENGTH:
-        return ExtractionResult(
-            False, cleaned, char_count, page_count,
-            f"Extracted text is too short ({char_count} characters). "
-            "The resume may be mostly images or contain insufficient text content."
-        )
+        # Try OCR fallback if text is suspiciously short
+        ocr_text = _run_ocr_fallback(path)
+        if ocr_text and len(ocr_text) > char_count:
+            cleaned = _normalize_text(ocr_text)
+            char_count = len(cleaned)
+            
+        if char_count < MIN_TEXT_LENGTH:
+            return ExtractionResult(
+                False, cleaned, char_count, page_count,
+                f"Extracted text is too short ({char_count} characters). "
+                "The resume may be mostly images or contain insufficient text content."
+            )
 
     return ExtractionResult(True, cleaned, char_count, page_count, None)
+
+
+def _run_ocr_fallback(pdf_path: Path) -> str | None:
+    """Attempt OCR extraction using pdf2image and pytesseract."""
+    try:
+        import pytesseract
+        from pdf2image import convert_from_path
+        
+        # Check if tesseract is available
+        try:
+            pytesseract.get_tesseract_version()
+        except pytesseract.TesseractNotFoundError:
+            logger.info("Tesseract not installed, skipping OCR fallback.")
+            return None
+            
+        logger.info("Running OCR fallback on %s", pdf_path.name)
+        images = convert_from_path(str(pdf_path), dpi=300)
+        
+        text_parts = []
+        for img in images:
+            text = pytesseract.image_to_string(img)
+            text_parts.append(text)
+            
+        return "\n".join(text_parts)
+    except ImportError:
+        logger.info("pdf2image or pytesseract not installed, skipping OCR fallback.")
+        return None
+    except Exception as exc:
+        logger.warning("OCR fallback failed for %s: %s", pdf_path.name, exc)
+        return None
 
 
 def _normalize_text(text: str) -> str:

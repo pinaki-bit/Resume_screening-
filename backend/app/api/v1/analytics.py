@@ -10,7 +10,6 @@ GET /api/v1/analytics/score-hist     — relevance score distribution
 GET /api/v1/analytics/review-status  — pending/approved/rejected counts
 """
 
-from __future__ import annotations
 
 import logging
 from collections import Counter
